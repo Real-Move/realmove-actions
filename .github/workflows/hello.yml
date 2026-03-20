@@ -8,3 +8,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: echo "Hello from reusable workflow"
+      - uses: Real-Move/realmove-actions/hello@main

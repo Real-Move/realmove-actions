@@ -1,0 +1,9 @@
+# action.yml
+name: Hello action
+description: "Greet someone"
+runs:
+  using: "composite"
+  steps:
+    - name: Set Greeting
+      run: echo "Hello from action"
+      shell: bash
