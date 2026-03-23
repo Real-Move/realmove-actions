@@ -1,0 +1,73 @@
+name: Reusable • Notify issue author if no labels
+on:
+  workflow_call:
+    inputs:
+      grace_seconds:
+        type: number
+        default: 60
+      helper_label:
+        type: string
+        default: needs-label
+      comment_text:
+        type: string
+        # Keep this generic; defaults with ${{ }} won't interpolate here.
+        default: "Hi @${issue.user.login} — please add at least one label so we can triage this."
+
+jobs:
+  notify:
+    if: ${{ github.event.issue.pull_request == null }}
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Grace period
+        run: sleep ${{ inputs.grace_seconds }}
+
+      - name: Comment if still unlabeled
+        uses: actions/github-script@v7
+        env:
+          HELPER_LABEL: ${{ inputs.helper_label }}
+          COMMENT_TEXT: ${{ inputs.comment_text }}
+        with:
+          script: |
+            const issue = context.payload.issue
+            if (!issue) {
+              core.info('No issue payload. Skipping.')
+              return
+            }
+            // Skip bots and already-labeled issues
+            if ((issue.user?.type || '').toLowerCase() === 'bot') return
+            if ((issue.labels || []).length > 0) return
+
+            const helperLabel = process.env.HELPER_LABEL
+            if (helperLabel) {
+              try {
+                await github.rest.issues.addLabels({
+                  ...context.repo,
+                  issue_number: issue.number,
+                  labels: [helperLabel]
+                })
+              } catch (e) {
+                core.info(`Could not add helper label: ${e.message}`)
+              }
+            }
+
+            // Build comment body safely
+            let body = (process.env.COMMENT_TEXT || '').trim()
+            if (!body) {
+              body = `Hi @${issue.user.login} — please add at least one label so we can triage this.`
+            } else {
+              // Allow the placeholder to be replaced
+              body = body.replaceAll('${issue.user.login}', issue.user.login)
+            }
+
+            // Final guard just in case
+            if (!body.trim()) {
+              throw new Error('Computed comment body is blank')
+            }
+
+            await github.rest.issues.createComment({
+              ...context.repo,
+              issue_number: issue.number,
+              body
+            })

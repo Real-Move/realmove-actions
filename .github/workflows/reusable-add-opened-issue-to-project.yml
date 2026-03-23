@@ -1,0 +1,38 @@
+name: Reusable • Add issue to Project
+
+on:
+  workflow_call:
+    inputs:
+      project_url:
+        description: "Projects (v2) URL, e.g. https://github.com/orgs/<org>/projects/<number>"
+        required: true
+        type: string
+      labeled:
+        description: "Comma-separated labels filter (optional)"
+        required: false
+        type: string
+      label_operator:
+        description: "AND | OR | NOT (optional, default OR)"
+        required: false
+        type: string
+        default: "OR"
+    secrets:
+      ADD_TO_PROJECT_PAT:
+        required: true
+
+jobs:
+  add-to-project:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: read
+      pull-requests: read
+      # Note: Project access comes from the PAT secret, not GITHUB_TOKEN
+    steps:
+      - name: Add to Project
+        uses: actions/add-to-project@v1.0.2
+        with:
+          project-url: ${{ inputs.project_url }}
+          github-token: ${{ secrets.ADD_TO_PROJECT_PAT }}
+          labeled: ${{ inputs.labeled }}
+          label-operator: ${{ inputs.label_operator }}

@@ -1,4 +1,4 @@
-name: ROS CI Test Build
+name: Reusable • ROS CI Test Build
 
 on:
   workflow_call:
@@ -27,6 +27,7 @@ on:
 
 jobs:
   build:
+    name: ROS CI Test Build
     runs-on: ubuntu-22.04
     container:
       image: osrf/ros:${{ inputs.ros_distro }}-desktop-full
