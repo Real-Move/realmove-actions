@@ -1,0 +1,141 @@
+name: Reusable • Build and Release Debian
+
+on:
+  workflow_call:
+    inputs:
+      ros_distro:
+        required: false
+        type: string
+        default: humble
+      ubuntu_codename:
+        required: false
+        type: string
+        default: jammy
+      container_image:
+        required: false
+        type: string
+        default: osrf/ros:humble-desktop-full
+      artifact_name:
+        required: false
+        type: string
+        default: ros-debian-package
+      apt_repo_url:
+        required: false
+        type: string
+        default: https://hri.iit.it/packages
+      apt_repo_distribution:
+        required: false
+        type: string
+        default: jammy
+      apt_repo_component:
+        required: false
+        type: string
+        default: main
+      rosdep_yaml_url:
+        required: false
+        type: string
+        default: https://hri.iit.it/packages/realmove.yaml
+      upload_release:
+        required: false
+        type: boolean
+        default: true
+
+env:
+  ROS_DISTRO: ${{ inputs.ros_distro }}
+  UBUNTU_CODENAME: ${{ inputs.ubuntu_codename }}
+
+jobs:
+  build-deb:
+    runs-on: ubuntu-latest
+    container:
+      image: ${{ inputs.container_image }}
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Build Tools
+        run: |
+          apt-get update && apt-get install -y \
+            python3 \
+            python3-bloom \
+            python3-rosdep \
+            fakeroot \
+            dpkg-dev \
+            debhelper \
+            curl
+
+      - name: Setup Apt Repository and Rosdep
+        run: |
+          echo "deb [trusted=yes] ${{ inputs.apt_repo_url }} ${{ inputs.apt_repo_distribution }} ${{ inputs.apt_repo_component }}" \
+            | tee /etc/apt/sources.list.d/custom.list
+
+          echo "yaml ${{ inputs.rosdep_yaml_url }}" \
+            | tee /etc/ros/rosdep/sources.list.d/50-custom.list
+
+          apt-get update
+
+      - name: Initialize rosdep
+        run: |
+          rosdep init || true
+          rosdep update
+          apt-get update
+          rosdep install --from-paths . --ignore-src -y
+
+      - name: Patch package.xml version from git tag
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          set -e
+
+          CLEAN_VERSION="${{ github.ref_name }}"
+          CLEAN_VERSION="${CLEAN_VERSION#v}"
+
+          echo "Patching package.xml version to: $CLEAN_VERSION"
+
+          python3 <<EOF
+          import xml.etree.ElementTree as ET
+
+          path = "package.xml"
+          tree = ET.parse(path)
+          root = tree.getroot()
+
+          version = root.find("version")
+          if version is None:
+              raise SystemExit("ERROR: No <version> element found in package.xml")
+
+          version.text = "${CLEAN_VERSION}"
+          tree.write(path, encoding="utf-8", xml_declaration=True)
+
+          print("Updated package.xml version to ${CLEAN_VERSION}")
+          EOF
+
+      - name: Generate Debian Source
+        run: |
+          bloom-generate rosdebian \
+            --os-name ubuntu \
+            --os-version "$UBUNTU_CODENAME" \
+            --ros-distro "$ROS_DISTRO"
+
+      - name: Build Binary Package
+        run: |
+          fakeroot debian/rules binary
+          mkdir -p artifacts
+          mv ../*.deb ./artifacts/
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.artifact_name }}
+          path: artifacts/*.deb
+
+      - name: Upload to GitHub Release
+        if: inputs.upload_release && startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          files: artifacts/*.deb
