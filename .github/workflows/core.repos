@@ -1,0 +1,5 @@
+repositories:
+  src/realmove_description_ros2:
+    type: git
+    url: git@github.com:Real-Move/realmove_description_ros2.git
+    version: devel

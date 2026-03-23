@@ -1,0 +1,85 @@
+name: ROS CI Test Build
+
+on:
+  workflow_call:
+    inputs:
+      ros_distro:
+        type: string
+        default: humble
+      workspace_mode:
+        type: string
+        default: deps # deps | core
+      deps_repos_file:
+        type: string
+        default: ""
+      skip_tests:
+        type: boolean
+        default: true
+      skip_rosdep_install:
+        type: boolean
+        default: false
+      rosdep_check:
+        type: boolean
+        default: false
+    secrets:
+      REPO_ORG_PAT:
+        required: true
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    container:
+      image: osrf/ros:${{ inputs.ros_distro }}-desktop-full
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # ✅ deps WITHOUT extra repos 
+      - name: Build deps (no extra repos)
+        if: ${{ inputs.workspace_mode == 'deps' && inputs.deps_repos_file == '' }}
+        uses: ros-tooling/action-ros-ci@v0.4
+        with:
+          target-ros2-distro: ${{ inputs.ros_distro }}
+          import-token: ${{ secrets.REPO_ORG_PAT }}
+          skip-tests: ${{ inputs.skip_tests }}
+          skip-rosdep-install: ${{ inputs.skip_rosdep_install }}
+          rosdep-check: ${{ inputs.rosdep_check }}
+          coverage-result: false
+
+      # ✅ deps WITH repos file 
+      - name: Build deps (with repos file)
+        if: ${{ inputs.workspace_mode == 'deps' && inputs.deps_repos_file != '' }}
+        uses: ros-tooling/action-ros-ci@v0.4
+        with:
+          target-ros2-distro: ${{ inputs.ros_distro }}
+          import-token: ${{ secrets.REPO_ORG_PAT }}
+          vcs-repo-file-url: ${{ inputs.deps_repos_file }}
+          skip-tests: ${{ inputs.skip_tests }}
+          skip-rosdep-install: ${{ inputs.skip_rosdep_install }}
+          rosdep-check: ${{ inputs.rosdep_check }}
+          coverage-result: false
+
+      - name: Checkout realmove-actions core workspace file
+        if: ${{ inputs.workspace_mode == 'core' }}
+        uses: actions/checkout@v4
+        with:
+          repository: my-org/realmove-actions
+          ref: main
+          token: ${{ secrets.REPO_ORG_PAT }}
+          path: realmove-actions
+          sparse-checkout: |
+            .github/workspaces/core.repos
+          sparse-checkout-cone-mode: false
+
+      # ✅ core mode
+      - name: Build core workspace
+        if: ${{ inputs.workspace_mode == 'core' }}
+        uses: ros-tooling/action-ros-ci@v0.4
+        with:
+          target-ros2-distro: ${{ inputs.ros_distro }}
+          import-token: ${{ secrets.REPO_ORG_PAT }}
+          vcs-repo-file-url: realmove-actions/.github/workspaces/core.repos
+          skip-tests: ${{ inputs.skip_tests }}
+          skip-rosdep-install: ${{ inputs.skip_rosdep_install }}
+          rosdep-check: ${{ inputs.rosdep_check }}
+          coverage-result: false
