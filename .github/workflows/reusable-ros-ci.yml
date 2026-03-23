@@ -30,7 +30,7 @@ jobs:
     name: ROS CI Test Build
     runs-on: ubuntu-22.04
     container:
-      image: osrf/ros:${{ inputs.ros_distro }}-desktop-full
+      image: ros:${{ inputs.ros_distro }}
 
     steps:
       - uses: actions/checkout@v4
