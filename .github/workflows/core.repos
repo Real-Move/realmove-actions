@@ -1,4 +1,16 @@
 repositories:
+  src/realmove_gui_ros2:
+    type: git
+    url: git@github.com:Real-Move/realmove_gui_ros2.git
+    version: devel
+  src/realmove_ros2_interfaces:
+    type: git
+    url: git@github.com:Real-Move/realmove_ros2_interfaces.git
+    version: devel
+  src/realmove_utils_ros2:
+    type: git
+    url: git@github.com:Real-Move/realmove_utils_ros2.git
+    version: devel
   src/realmove_description_ros2:
     type: git
     url: git@github.com:Real-Move/realmove_description_ros2.git
