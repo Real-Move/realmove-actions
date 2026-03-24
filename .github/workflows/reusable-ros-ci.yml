@@ -64,7 +64,7 @@ jobs:
         if: ${{ inputs.workspace_mode == 'core' }}
         uses: actions/checkout@v4
         with:
-          repository: my-org/realmove-actions
+          repository: Real-Move/realmove-actions
           ref: main
           token: ${{ secrets.REPO_ORG_PAT }}
           path: realmove-actions
