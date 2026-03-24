@@ -69,7 +69,7 @@ jobs:
           token: ${{ secrets.REPO_ORG_PAT }}
           path: realmove-actions
           sparse-checkout: |
-            .github/workspaces/core.repos
+            .github/workflows/core.repos
           sparse-checkout-cone-mode: false
 
       # ✅ core mode
@@ -79,7 +79,7 @@ jobs:
         with:
           target-ros2-distro: ${{ inputs.ros_distro }}
           import-token: ${{ secrets.REPO_ORG_PAT }}
-          vcs-repo-file-url: realmove-actions/.github/workspaces/core.repos
+          vcs-repo-file-url: realmove-actions/.github/workflows/core.repos
           skip-tests: ${{ inputs.skip_tests }}
           skip-rosdep-install: ${{ inputs.skip_rosdep_install }}
           rosdep-check: ${{ inputs.rosdep_check }}
