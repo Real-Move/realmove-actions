@@ -15,3 +15,7 @@ repositories:
     type: git
     url: git@github.com:Real-Move/realmove_description_ros2.git
     version: devel
+  src/realmove_reconstruction_ros2:
+    type: git
+    url: git@github.com:Real-Move/realmove_reconstruction_ros2.git
+    version: code-refactoring
