@@ -1,0 +1,24 @@
+name: pre-commit
+
+on: [push, pull_request]
+
+jobs:
+  pre-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+
+      - run: pip install pre-commit
+
+      - name: Run pre-commit
+        run: |
+          pre-commit run --all-files || {
+            echo "❌ Pre-commit checks failed!"
+            echo ""
+            echo "👉 Run this locally to fix:"
+            echo "   pip install pre-commit"
+            echo "   pre-commit install"
+            echo "   pre-commit run --all-files"
+            exit 1
+          }
