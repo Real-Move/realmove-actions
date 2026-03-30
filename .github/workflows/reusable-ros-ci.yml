@@ -33,7 +33,7 @@ jobs:
       image: ros:${{ inputs.ros_distro }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       # ✅ deps WITHOUT extra repos 
       - name: Build deps (no extra repos)
@@ -62,7 +62,7 @@ jobs:
 
       - name: Checkout realmove-actions core workspace file
         if: ${{ inputs.workspace_mode == 'core' }}
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: Real-Move/realmove-actions
           ref: main

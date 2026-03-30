@@ -1,4 +1,4 @@
-name: pre-commit
+name: Reusable • Pre-Commit Checks
 
 on: 
   workflow_call:
@@ -7,7 +7,7 @@ jobs:
   pre-commit:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-python@v5
 
       - run: pip install pre-commit
