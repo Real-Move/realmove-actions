@@ -16,6 +16,7 @@ This repository includes:
   - [ROS CI](#ros-ci)
   - [Notify Unlabeled Issue](#notify-unlabeled-issue)
   - [Add Opened Issue to Project](#add-opened-issue-to-project)
+  - [Trigger Target Workflow](#trigger-target-workflow)
 - [Wrapper Workflows](#wrapper-workflows)
 - [Composite Action](#composite-action)
 - [Example Usage](#example-usage)
@@ -54,6 +55,11 @@ Waits briefly after an issue is opened or updated, then comments on still-unlabe
 File: `.github/workflows/reusable-add-opened-issue-to-project.yml`
 
 Adds issues or pull requests to a GitHub Projects board, with optional label-based filtering.
+
+### Trigger Target Workflow
+File: `.github/workflows/reusable-trigger-target-workflow.yml`
+
+Sends a `repository_dispatch` event to another repository using a PAT, forwarding the source branch in `client_payload.branch_name`.
 
 ## Wrapper Workflows
 
