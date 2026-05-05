@@ -60,6 +60,16 @@ jobs:
           rosdep-check: ${{ inputs.rosdep_check }}
           coverage-result: false
 
+      - name: Install Pinocchio workaround
+        if: ${{ inputs.workspace_mode == 'core' }}
+        shell: bash
+        run: |
+          apt-get update
+          apt-get install -y software-properties-common
+          add-apt-repository -y universe
+          apt-get update
+          apt-get install -y ros-${{ inputs.ros_distro }}-pinocchio
+
       - name: Checkout realmove-actions core workspace file
         if: ${{ inputs.workspace_mode == 'core' }}
         uses: actions/checkout@v5
@@ -83,4 +93,5 @@ jobs:
           skip-tests: ${{ inputs.skip_tests }}
           skip-rosdep-install: ${{ inputs.skip_rosdep_install }}
           rosdep-check: ${{ inputs.rosdep_check }}
+          rosdep-skip-keys: pinocchio
           coverage-result: false
