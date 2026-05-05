@@ -18,4 +18,4 @@ repositories:
   src/realmove_reconstruction_ros2:
     type: git
     url: git@github.com:Real-Move/realmove_reconstruction_ros2.git
-    version: code-refactoring
+    version: devel
