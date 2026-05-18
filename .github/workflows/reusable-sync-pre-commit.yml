@@ -1,0 +1,57 @@
+# realmove-actions/.github/workflows/sync-pre-commit.yml
+name: Sync pre-commit config
+
+on:
+  workflow_call:
+    inputs:
+      base_config:
+        default: "pre-commit/base.yaml"
+        type: string
+      local_config:
+        default: ".pre-commit-config.local.yaml"
+        type: string
+      output_config:
+        default: ".pre-commit-config.yaml"
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Checkout realmove-actions
+        uses: actions/checkout@v6
+        with:
+          repository: Real-Move/realmove-actions
+          ref: main
+          path: realmove-actions
+
+      - name: Install yq
+        run: |
+          sudo snap install yq
+
+      - name: Merge pre-commit configs
+        run: |
+          BASE="realmove-actions/${{ inputs.base_config }}"
+          LOCAL="${{ inputs.local_config }}"
+          OUTPUT="${{ inputs.output_config }}"
+
+          if [ -f "$LOCAL" ]; then
+            yq eval-all '. as $item ireduce ({}; . *+ $item)' "$BASE" "$LOCAL" > "$OUTPUT"
+          else
+            cp "$BASE" "$OUTPUT"
+          fi
+
+      - name: Create pull request if changed
+        uses: peter-evans/create-pull-request@v8
+        with:
+          branch: chore/sync-pre-commit-config
+          title: "chore: sync pre-commit config"
+          commit-message: "chore: sync pre-commit config"
+          body: "Syncs the shared pre-commit config from realmove-actions."
