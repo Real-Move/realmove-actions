@@ -1,4 +1,4 @@
-name: Reusable • Add issue to Project
+name: Reusable • Add Issue to Project
 
 on:
   workflow_call:
