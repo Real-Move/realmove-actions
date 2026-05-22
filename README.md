@@ -15,6 +15,7 @@ This repository includes:
   - [Build and Release Debian](#build-and-release-debian)
   - [ROS CI](#ros-ci)
   - [Notify Unlabeled Issue](#notify-unlabeled-issue)
+  - [Notify Unlabeled PR](#notify-unlabeled-pr)
   - [Add Opened Issue to Project](#add-opened-issue-to-project)
   - [Trigger Target Workflow](#trigger-target-workflow)
 - [Wrapper Workflows](#wrapper-workflows)
@@ -51,6 +52,11 @@ File: `.github/workflows/reusable-notify-unlabeled-issue.yml`
 
 Waits briefly after an issue is opened or updated, then comments on still-unlabeled issues and can add a helper label for triage.
 
+### Notify Unlabeled PR
+File: `.github/workflows/reusable-notify-unlabeled-pr.yml`
+
+Waits briefly after a pull request is opened or updated, then comments on still-unlabeled pull requests and can add a helper label for triage.
+
 ### Add Opened Issue to Project
 File: `.github/workflows/reusable-add-opened-issue-to-project.yml`
 
@@ -69,6 +75,11 @@ These workflows are ready-to-use examples that call the reusable workflows above
 File: `.github/workflows/notify-unlabeled-issue.yml`
 
 Example wrapper that runs the unlabeled-issue reminder workflow on issue activity.
+
+### Notify PR Author if No Labels
+File: `.github/workflows/notify-unlabeled-pr.yml`
+
+Example wrapper that runs the unlabeled-PR reminder workflow on pull request activity.
 
 ### Add Opened Issue to Main Project
 File: `.github/workflows/add-opened-issue-to-project.yml`

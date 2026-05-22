@@ -1,0 +1,18 @@
+name: Notify PR Author if No Labels
+
+on:
+  pull_request:
+    types: [opened, edited, unlabeled, reopened, ready_for_review]
+
+permissions:
+  issues: write
+  pull-requests: read
+
+jobs:
+  notify:
+    uses: Real-Move/realmove-actions/.github/workflows/reusable-notify-unlabeled-pr.yml@main
+    with:
+      helper_label: needs-label
+    permissions:
+      issues: write
+      pull-requests: read
