@@ -1,6 +1,6 @@
 name: Reusable • Pre-Commit Checks
 
-on: 
+on:
   workflow_call:
 
 jobs:

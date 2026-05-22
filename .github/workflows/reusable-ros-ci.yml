@@ -28,14 +28,14 @@ on:
 jobs:
   build:
     name: ROS CI Test Build
-    runs-on: ubuntu-22.04
+    runs-on: [self-hosted, linux, x64]
     container:
       image: ros:${{ inputs.ros_distro }}
 
     steps:
       - uses: actions/checkout@v5
 
-      # ✅ deps WITHOUT extra repos 
+      # ✅ deps WITHOUT extra repos
       - name: Build deps (no extra repos)
         if: ${{ inputs.workspace_mode == 'deps' && inputs.deps_repos_file == '' }}
         uses: ros-tooling/action-ros-ci@v0.4
@@ -47,7 +47,7 @@ jobs:
           rosdep-check: ${{ inputs.rosdep_check }}
           coverage-result: false
 
-      # ✅ deps WITH repos file 
+      # ✅ deps WITH repos file
       - name: Build deps (with repos file)
         if: ${{ inputs.workspace_mode == 'deps' && inputs.deps_repos_file != '' }}
         uses: ros-tooling/action-ros-ci@v0.4
