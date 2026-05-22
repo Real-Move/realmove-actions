@@ -4,7 +4,7 @@ on:
     inputs:
       grace_seconds:
         type: number
-        default: 60
+        default: 120
       helper_label:
         type: string
         default: needs-label
