@@ -47,6 +47,8 @@ File: `.github/workflows/reusable-ros-ci.yml`
 
 Runs ROS CI builds with `ros-tooling/action-ros-ci`, either for repository dependencies or for a shared core workspace defined in `core.repos`.
 
+In `deps` mode, `deps_repos_file` is optional. If a configured local file is missing, CI emits a warning and continues without extra repository imports. Existing files and HTTP(S) URLs are passed to the ROS action; invalid contents or URL import failures still fail the build. Core mode continues to use `core.repos`.
+
 ### Notify Unlabeled Issue
 File: `.github/workflows/reusable-notify-unlabeled-issue.yml`
 

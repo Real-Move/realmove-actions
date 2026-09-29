@@ -35,9 +35,23 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      - name: Check optional dependency repos file
+        id: deps_repos
+        if: ${{ inputs.workspace_mode == 'deps' && inputs.deps_repos_file != '' }}
+        shell: bash
+        env:
+          DEPS_REPOS_FILE: ${{ inputs.deps_repos_file }}
+        run: |
+          if [[ "$DEPS_REPOS_FILE" == http://* || "$DEPS_REPOS_FILE" == https://* || -f "${DEPS_REPOS_FILE#file://}" ]]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::Configured deps_repos_file does not exist; continuing without extra repository imports."
+            echo "available=false" >> "$GITHUB_OUTPUT"
+          fi
+
       # ✅ deps WITHOUT extra repos
       - name: Build deps (no extra repos)
-        if: ${{ inputs.workspace_mode == 'deps' && inputs.deps_repos_file == '' }}
+        if: ${{ inputs.workspace_mode == 'deps' && steps.deps_repos.outputs.available != 'true' }}
         uses: ros-tooling/action-ros-ci@v0.4
         with:
           target-ros2-distro: ${{ inputs.ros_distro }}
@@ -49,7 +63,7 @@ jobs:
 
       # ✅ deps WITH repos file
       - name: Build deps (with repos file)
-        if: ${{ inputs.workspace_mode == 'deps' && inputs.deps_repos_file != '' }}
+        if: ${{ inputs.workspace_mode == 'deps' && steps.deps_repos.outputs.available == 'true' }}
         uses: ros-tooling/action-ros-ci@v0.4
         with:
           target-ros2-distro: ${{ inputs.ros_distro }}
