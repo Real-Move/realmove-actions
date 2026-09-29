@@ -1,11 +1,10 @@
-# realmove-actions/.github/workflows/sync-pre-commit.yml
 name: Sync pre-commit config
 
 on:
   workflow_call:
     inputs:
       base_config:
-        default: "pre-commit/base.yaml"
+        default: ".github-private/repo-standards/formatting/pre-commit/base.yaml"
         type: string
       local_config:
         default: ".pre-commit-config.local.yaml"
@@ -13,6 +12,9 @@ on:
       output_config:
         default: ".pre-commit-config.yaml"
         type: string
+    secrets:
+      REPO_ORG_PAT:
+        required: true
 
 permissions:
   contents: write
@@ -25,12 +27,16 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Checkout realmove-actions
+      - name: Checkout .github-private pre-commit config
         uses: actions/checkout@v6
         with:
-          repository: Real-Move/realmove-actions
+          repository: Real-Move/.github-private
           ref: main
-          path: realmove-actions
+          token: ${{ secrets.REPO_ORG_PAT }}
+          path: .github-private
+          sparse-checkout: |
+            repo-standards/formatting/pre-commit/base.yaml
+          sparse-checkout-cone-mode: false
 
       - name: Install yq
         run: |
@@ -38,7 +44,7 @@ jobs:
 
       - name: Merge pre-commit configs
         run: |
-          BASE="realmove-actions/${{ inputs.base_config }}"
+          BASE="${{ inputs.base_config }}"
           LOCAL="${{ inputs.local_config }}"
           OUTPUT="${{ inputs.output_config }}"
 
@@ -54,4 +60,4 @@ jobs:
           branch: chore/sync-pre-commit-config
           title: "chore: sync pre-commit config"
           commit-message: "chore: sync pre-commit config"
-          body: "Syncs the shared pre-commit config from realmove-actions."
+          body: "Syncs the shared pre-commit config from .github-private."
