@@ -47,6 +47,23 @@ File: `.github/workflows/reusable-ros-ci.yml`
 
 Runs ROS CI builds with `ros-tooling/action-ros-ci`, either for repository dependencies or for a shared core workspace defined in `core.repos`.
 
+Uses `ghcr.io/real-move/ros-ci:<ros_distro>` on the self-hosted AMD64 runner. Currently
+only `humble` is built by `realmove-containers`; publish that image before enabling
+this workflow. The image includes ROS build/test tools, Pinocchio, and ccache, so
+core builds no longer install Pinocchio separately. Package-specific dependencies
+are still installed by rosdep unless the caller explicitly skips installation.
+
+For private GHCR images, the caller can pass `GCR_PAT` with package read access.
+Otherwise `REPO_ORG_PAT` is used and must also be able to read the image. Credentials
+are applied at container startup, before any workflow steps run.
+
+C/C++ compiler results persist in the runner-local Docker volume
+`realmove-ros-ci-ccache`, under a separate repository/distro/architecture directory
+with a 5 GiB limit per directory. Different runner machines have independent
+caches. Job summaries include per-run cache statistics when compilation occurred
+and cumulative cache totals. Tests still run normally; build/install directories
+are not restored from cache. Removing the Docker volume clears the compiler cache.
+
 In `deps` mode, `deps_repos_file` is optional. If a configured local file is missing, CI emits a warning and continues without extra repository imports. Existing files and HTTP(S) URLs are passed to the ROS action; invalid contents or URL import failures still fail the build. Core mode continues to use `core.repos`.
 
 ### Notify Unlabeled Issue

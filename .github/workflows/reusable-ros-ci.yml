@@ -24,16 +24,37 @@ on:
     secrets:
       REPO_ORG_PAT:
         required: true
+      GCR_PAT:
+        description: Optional GHCR read token; defaults to REPO_ORG_PAT.
+        required: false
 
 jobs:
   build:
     name: ROS CI Test Build
     runs-on: [self-hosted, linux, x64]
     container:
-      image: ros:${{ inputs.ros_distro }}
+      image: ghcr.io/real-move/ros-ci:${{ inputs.ros_distro }}
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GCR_PAT || secrets.REPO_ORG_PAT }}
+      volumes:
+        - realmove-ros-ci-ccache:/ccache
+      env:
+        CCACHE_DIR: /ccache/${{ github.repository }}/${{ inputs.ros_distro }}/amd64
+        CCACHE_MAXSIZE: 5G
+        CCACHE_COMPILERCHECK: content
+        CMAKE_C_COMPILER_LAUNCHER: ccache
+        CMAKE_CXX_COMPILER_LAUNCHER: ccache
 
     steps:
       - uses: actions/checkout@v5
+
+      - name: Prepare compiler cache
+        shell: bash
+        run: |
+          mkdir -p "$CCACHE_DIR"
+          echo "CCACHE_BASEDIR=$GITHUB_WORKSPACE" >> "$GITHUB_ENV"
+          echo "CCACHE_STATSLOG=$RUNNER_TEMP/ros-ci-ccache-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}.log" >> "$GITHUB_ENV"
 
       - name: Check optional dependency repos file
         id: deps_repos
@@ -74,16 +95,6 @@ jobs:
           rosdep-check: ${{ inputs.rosdep_check }}
           coverage-result: false
 
-      - name: Install Pinocchio workaround
-        if: ${{ inputs.workspace_mode == 'core' }}
-        shell: bash
-        run: |
-          apt-get update
-          apt-get install -y software-properties-common
-          add-apt-repository -y universe
-          apt-get update
-          apt-get install -y ros-${{ inputs.ros_distro }}-pinocchio
-
       - name: Checkout realmove-actions core workspace file
         if: ${{ inputs.workspace_mode == 'core' }}
         uses: actions/checkout@v5
@@ -109,3 +120,21 @@ jobs:
           rosdep-check: ${{ inputs.rosdep_check }}
           rosdep-skip-keys: pinocchio
           coverage-result: false
+
+      - name: Report compiler cache statistics
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo '### Compiler cache'
+            if [[ -f "$CCACHE_STATSLOG" ]]; then
+              echo 'This run:'
+              echo '```text'
+              ccache --show-log-stats
+              echo '```'
+            fi
+            echo 'Persistent cache totals (all runs for this repository and distro):'
+            echo '```text'
+            ccache --show-stats
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
