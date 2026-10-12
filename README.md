@@ -61,7 +61,9 @@ C/C++ compiler results persist in the runner-local Docker volume
 `realmove-ros-ci-ccache`, under a separate repository/distro/architecture directory
 with a 5 GiB limit per directory. Different runner machines have independent
 caches. Job summaries include per-run cache statistics when compilation occurred
-and cumulative cache totals. Tests still run normally; build/install directories
+and cumulative cache totals. A separate ROS summary reports job/action status,
+workspace mode, dependency selection, and available colcon test totals (or why
+results are unavailable/disabled). Tests still run normally; build/install directories
 are not restored from cache. Removing the Docker volume clears the compiler cache.
 
 In `deps` mode, `deps_repos_file` is optional. If a configured local file is missing, CI emits a warning and continues without extra repository imports. Existing files and HTTP(S) URLs are passed to the ROS action; invalid contents or URL import failures still fail the build. Core mode continues to use `core.repos`.

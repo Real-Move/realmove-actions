@@ -72,6 +72,7 @@ jobs:
 
       # ✅ deps WITHOUT extra repos
       - name: Build deps (no extra repos)
+        id: build_deps
         if: ${{ inputs.workspace_mode == 'deps' && steps.deps_repos.outputs.available != 'true' }}
         uses: ros-tooling/action-ros-ci@v0.4
         with:
@@ -84,6 +85,7 @@ jobs:
 
       # ✅ deps WITH repos file
       - name: Build deps (with repos file)
+        id: build_deps_repos
         if: ${{ inputs.workspace_mode == 'deps' && steps.deps_repos.outputs.available == 'true' }}
         uses: ros-tooling/action-ros-ci@v0.4
         with:
@@ -109,6 +111,7 @@ jobs:
 
       # ✅ core mode
       - name: Build core workspace
+        id: build_core
         if: ${{ inputs.workspace_mode == 'core' }}
         uses: ros-tooling/action-ros-ci@v0.4
         with:
@@ -120,6 +123,56 @@ jobs:
           rosdep-check: ${{ inputs.rosdep_check }}
           rosdep-skip-keys: pinocchio
           coverage-result: false
+
+      - name: Report ROS build and test summary
+        if: always()
+        shell: bash
+        env:
+          ROS_DISTRO_NAME: ${{ inputs.ros_distro }}
+          WORKSPACE_MODE: ${{ inputs.workspace_mode }}
+          SKIP_TESTS: ${{ inputs.skip_tests }}
+          JOB_STATUS: ${{ job.status }}
+          DEPS_AVAILABLE: ${{ steps.deps_repos.outputs.available }}
+          DEPS_RESULT: ${{ steps.build_deps.outcome }}
+          DEPS_REPOS_RESULT: ${{ steps.build_deps_repos.outcome }}
+          CORE_RESULT: ${{ steps.build_core.outcome }}
+          ROS_WORKSPACE: ${{ steps.build_deps.outputs['ros-workspace-directory-name'] || steps.build_deps_repos.outputs['ros-workspace-directory-name'] || steps.build_core.outputs['ros-workspace-directory-name'] }}
+        run: |
+          if [[ "$WORKSPACE_MODE" == core ]]; then
+            result="$CORE_RESULT"
+            dependencies='Core workspace'
+          elif [[ "$DEPS_AVAILABLE" == true ]]; then
+            result="$DEPS_REPOS_RESULT"
+            dependencies='Configured repos file'
+          else
+            result="$DEPS_RESULT"
+            dependencies='No extra repository imports'
+          fi
+          {
+            echo '### ROS build and tests'
+            echo
+            echo '| Item | Result |'
+            echo '| --- | --- |'
+            printf '| Job status | %s |\n' "$JOB_STATUS"
+            printf '| ROS distribution | %s |\n' "$ROS_DISTRO_NAME"
+            printf '| Workspace mode | %s |\n' "$WORKSPACE_MODE"
+            printf '| Dependencies | %s |\n' "$dependencies"
+            printf '| ROS CI action | %s |\n' "${result:-not run}"
+            echo
+            if [[ "$SKIP_TESTS" == true ]]; then
+              echo 'Tests were disabled by the caller (`skip_tests: true`).'
+            elif [[ -n "$ROS_WORKSPACE" && -d "$ROS_WORKSPACE/build" ]]; then
+              echo 'Available test results (may be incomplete if the ROS CI action failed):'
+              echo
+              echo '```text'
+              if ! colcon test-result --test-result-base "$ROS_WORKSPACE/build"; then
+                echo 'Test-result reporting returned a nonzero status; inspect the ROS CI step logs.'
+              fi
+              echo '```'
+            else
+              echo 'No test results are available; see the ROS CI step logs for setup or build failures.'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Report compiler cache statistics
         if: always()
