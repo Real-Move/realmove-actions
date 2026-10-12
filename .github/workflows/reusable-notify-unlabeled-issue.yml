@@ -30,11 +30,16 @@ jobs:
           COMMENT_TEXT: ${{ inputs.comment_text }}
         with:
           script: |
-            const issue = context.payload.issue
-            if (!issue) {
+            const eventIssue = context.payload.issue
+            if (!eventIssue) {
               core.info('No issue payload. Skipping.')
               return
             }
+            // Refresh after the grace period; the event payload is a snapshot.
+            const { data: issue } = await github.rest.issues.get({
+              ...context.repo,
+              issue_number: eventIssue.number
+            })
             // Skip bots and already-labeled issues
             if ((issue.user?.type || '').toLowerCase() === 'bot') return
             if ((issue.labels || []).length > 0) return

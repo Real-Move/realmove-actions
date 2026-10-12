@@ -32,11 +32,16 @@ jobs:
           COMMENT_TEXT: ${{ inputs.comment_text }}
         with:
           script: |
-            const pullRequest = context.payload.pull_request
-            if (!pullRequest) {
+            const eventPullRequest = context.payload.pull_request
+            if (!eventPullRequest) {
               core.info('No pull request payload. Skipping.')
               return
             }
+            // Refresh after the grace period; the event payload is a snapshot.
+            const { data: pullRequest } = await github.rest.pulls.get({
+              ...context.repo,
+              pull_number: eventPullRequest.number
+            })
             // Skip bots and already-labeled pull requests
             if ((pullRequest.user?.type || '').toLowerCase() === 'bot') return
             if ((pullRequest.labels || []).length > 0) return
