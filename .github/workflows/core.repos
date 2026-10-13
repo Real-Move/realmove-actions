@@ -19,3 +19,7 @@ repositories:
     type: git
     url: git@github.com:Real-Move/realmove_reconstruction_ros2.git
     version: devel
+  src/realmove_calibration_ros2:
+    type: git
+    url: git@github.com:Real-Move/realmove_calibration_ros2.git
+    version: devel
