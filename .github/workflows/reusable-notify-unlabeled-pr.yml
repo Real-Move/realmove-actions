@@ -5,7 +5,7 @@ on:
     inputs:
       grace_seconds:
         type: number
-        default: 120
+        default: 60
       helper_label:
         type: string
         default: needs-label
@@ -16,7 +16,11 @@ on:
 
 jobs:
   notify:
-    if: ${{ github.event.pull_request != null }}
+    if: >-
+      ${{ github.event.action == 'opened' &&
+          github.event.pull_request != null &&
+          github.event.pull_request.user.type != 'Bot' &&
+          toJSON(github.event.pull_request.labels) == '[]' }}
     runs-on: ubuntu-latest
     permissions:
       issues: write

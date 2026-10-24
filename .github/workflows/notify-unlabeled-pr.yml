@@ -2,7 +2,7 @@ name: Notify PR Author if No Labels
 
 on:
   pull_request:
-    types: [opened, edited, unlabeled, reopened, ready_for_review]
+    types: [opened]
 
 permissions:
   issues: write

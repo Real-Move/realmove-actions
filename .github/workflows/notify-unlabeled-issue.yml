@@ -2,7 +2,7 @@ name: Notify Issue Author if No Labels
 
 on:
   issues:
-    types: [opened, edited, unlabeled]
+    types: [opened]
 
 permissions:
   issues: write
