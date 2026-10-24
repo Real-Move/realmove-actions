@@ -5,10 +5,19 @@ on:
 
 jobs:
   pre-commit:
+    concurrency:
+      group: pre-commit-${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: true
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v5
+        id: python
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit-${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{ hashFiles('.pre-commit-config.yaml') }}
 
       - run: pip install pre-commit
 
