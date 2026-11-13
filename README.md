@@ -47,11 +47,16 @@ File: `.github/workflows/reusable-ros-ci.yml`
 
 Runs ROS CI builds with `ros-tooling/action-ros-ci`, either for repository dependencies or for a shared core workspace defined in `core.repos`.
 
-Uses `ghcr.io/real-move/ros-ci:<ros_distro>` on the self-hosted AMD64 runner. Currently
+Uses `ghcr.io/real-move/ros-dev:<ros_distro>` on the self-hosted AMD64 runner. Currently
 only `humble` is built by `realmove-containers`; publish that image before enabling
 this workflow. The image includes ROS build/test tools, Pinocchio, and ccache, so
 core builds no longer install Pinocchio separately. Package-specific dependencies
 are still installed by rosdep unless the caller explicitly skips installation.
+
+Callers that need a heavier image (for example Torch) can pass `container_image`,
+e.g. `ghcr.io/real-move/realmove-ros-torch:humble`. If the image lacks ccache, the
+workflow installs it with apt before building. Repositories with private submodules
+can set `checkout_submodules: recursive`; the checkout then uses `REPO_ORG_PAT`.
 
 For private GHCR images, the caller can pass `GCR_PAT` with package read access.
 Otherwise `REPO_ORG_PAT` is used and must also be able to read the image. Credentials
