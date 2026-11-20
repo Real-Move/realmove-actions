@@ -31,6 +31,16 @@ on:
       rosdep_check:
         type: boolean
         default: false
+      gpu:
+        description: Give the build container access to all host GPUs (`--gpus all`). Needs the NVIDIA Container Toolkit on the runner.
+        type: boolean
+        default: false
+      weights_host_dir:
+        description: >-
+          Optional host folder with model weights. It is mounted read-only at /weights,
+          and REALMOVE_WEIGHTS_DIR=/weights is set in the container. Empty mounts nothing.
+        type: string
+        default: ""
     secrets:
       REPO_ORG_PAT:
         required: true
@@ -49,7 +59,11 @@ jobs:
         password: ${{ secrets.GCR_PAT || secrets.REPO_ORG_PAT }}
       volumes:
         - realmove-ros-ci-ccache:/ccache
+      options: >-
+        ${{ inputs.gpu && '--gpus all' || '' }}
+        ${{ inputs.weights_host_dir != '' && format('--volume {0}:/weights:ro', inputs.weights_host_dir) || '' }}
       env:
+        REALMOVE_WEIGHTS_DIR: ${{ inputs.weights_host_dir != '' && '/weights' || '' }}
         CCACHE_DIR: /ccache/${{ github.repository }}/${{ inputs.ros_distro }}/amd64
         CCACHE_MAXSIZE: 5G
         CCACHE_COMPILERCHECK: content
